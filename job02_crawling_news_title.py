@@ -28,7 +28,7 @@ driver = webdriver.Chrome(service=service, options=options)  # <- options로 변
 category = ['Politics', 'Economic', 'Social', 'Culture', 'World', 'IT']
 pages = [110, 110, 110, 75, 110, 72]
 df_titles = pd.DataFrame()
-for l in range(6):
+for l in range(2):
     section_url = 'https://news.naver.com/main/main.naver?mode=LSD&mid=shm&sid1=10{}'.format(l)
     titles = []
     for k in range(1, 3):
@@ -37,23 +37,30 @@ for l in range(6):
         time.sleep(0.5)
         for i in range(1, 5):
             for j in range(1, 6):
-                title = driver.find_element('xpath', '//*[@id="section_body"]/ul[{}]/li[{}]/dl/dt[2]/a'.format(i, j)).text
-                title = re.compile('[^가-힣]').sub(' ', title)
-                titles.append(title)
+                try:
+                    title = driver.find_element('xpath', '//*[@id="section_body"]/ul[{}]/li[{}]/dl/dt[2]/a'.format(i, j)).text
+                    title = re.compile('[^가-힣]').sub(' ', title)
+                    titles.append(title)
+                except:
+                    print('error {} {} {} {}'.format(l, k, i, j))
+        if k % 10 == 0:
+            df_section_title = pd.DataFrame(titles, columns=['titles'])
+            df_section_title['category'] = category[l]
+            df_section_title.to_csv('./crawling_data/crawling_data_{}_{}.csv'.format(l, k), index=False)
+            titles = []
     df_section_title = pd.DataFrame(titles, columns=['titles'])
     df_section_title['category'] = category[l]
-    df_titles = pd.concat([df_titles, df_section_title], ignore_index=True)
-df_titles.to_csv('./crawling_data/crawling_data.csv', index=False)
+    df_section_title.to_csv('./crawling_data/crawling_data_last.csv', index=False)
 
-print(df_titles.head())
-df_titles.info()
-print(df_titles['category'].value_counts())
+driver.close()
 
 # //*[@id="section_body"]/ul[1]/li[1]/dl/dt[2]/a
 # //*[@id="section_body"]/ul[1]/li[2]/dl/dt[2]/a
 # //*[@id="section_body"]/ul[1]/li[5]/dl/dt[2]/a
 # //*[@id="section_body"]/ul[2]/li[1]/dl/dt[2]/a
 # //*[@id="section_body"]/ul[4]/li[5]/dl/dt[2]/a
+# //*[@id="section_body"]/ul[4]/li[4]/dl/dt[2]/a
+# //*[@id="section_body"]/ul[4]/li[4]/dl/dt[1]/a/img
 
 
 
